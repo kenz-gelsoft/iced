@@ -723,6 +723,8 @@ async fn run_instance<P, C>(
                     clipboard = Clipboard::connect(window.raw.clone());
                 }
 
+                window.raw.set_ime_allowed(true);
+
                 let _ = on_open.send(id);
                 is_window_opening = false;
             }
