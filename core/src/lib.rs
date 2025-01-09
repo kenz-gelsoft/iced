@@ -17,6 +17,7 @@ pub mod event;
 pub mod font;
 pub mod gradient;
 pub mod image;
+pub mod input_method;
 pub mod keyboard;
 pub mod layout;
 pub mod mouse;

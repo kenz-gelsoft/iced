@@ -36,6 +36,7 @@ mod value;
 pub mod cursor;
 
 pub use cursor::Cursor;
+use iced_runtime::core::input_method;
 pub use value::Value;
 
 use editor::Editor;
@@ -1196,6 +1197,31 @@ where
                 let state = state::<Renderer>(tree);
 
                 state.keyboard_modifiers = *modifiers;
+            }
+            Event::InputMethod(input_method::Event::Commit(string)) => {
+                let state = state::<Renderer>(tree);
+
+                if let Some(focus) = &mut state.is_focused {
+                    let Some(on_input) = &self.on_input else {
+                        return;
+                    };
+
+                    state.is_pasting = None;
+
+                    let mut editor =
+                        Editor::new(&mut self.value, &mut state.cursor);
+
+                    editor.paste(Value::new(&string));
+
+                    let message = (on_input)(editor.contents());
+                    shell.publish(message);
+
+                    focus.updated_at = Instant::now();
+
+                    update_cache(state, &self.value);
+
+                    shell.capture_event();
+                }
             }
             Event::Window(window::Event::Unfocused) => {
                 let state = state::<Renderer>(tree);

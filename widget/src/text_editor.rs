@@ -33,6 +33,7 @@
 //! ```
 use crate::core::alignment;
 use crate::core::clipboard::{self, Clipboard};
+use crate::core::input_method;
 use crate::core::keyboard;
 use crate::core::keyboard::key;
 use crate::core::layout::{self, Layout};
@@ -1190,6 +1191,10 @@ impl<Message> Update<Message> {
                     }))
                 }
                 _ => None,
+            },
+            Event::InputMethod(input_method::Event::Commit(string)) => {
+                println!("Commit!");
+                None
             },
             Event::Keyboard(keyboard::Event::KeyPressed {
                 key,
