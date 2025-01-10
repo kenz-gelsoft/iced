@@ -131,7 +131,7 @@ where
 
         let task = if messages.is_empty() {
             debug.draw_started();
-            (self.mouse_interaction, _) =
+            self.mouse_interaction =
                 user_interface.draw(renderer, theme, style, cursor);
             debug.draw_finished();
 
@@ -162,7 +162,7 @@ where
             );
 
             debug.draw_started();
-            (self.mouse_interaction, _) =
+            self.mouse_interaction =
                 user_interface.draw(renderer, theme, style, cursor);
             debug.draw_finished();
 

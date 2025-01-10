@@ -1323,15 +1323,6 @@ where
             mouse::Interaction::default()
         }
     }
-
-    fn text_cursor(
-        &self,
-        _state: &Tree,
-        _layout: Layout<'_>,
-        _renderer: &Renderer,
-    ) -> bool {
-        true
-    }
 }
 
 impl<'a, Message, Theme, Renderer> From<TextInput<'a, Message, Theme, Renderer>>
