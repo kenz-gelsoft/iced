@@ -138,6 +138,16 @@ where
         mouse::Interaction::None
     }
 
+    /// Returns the text cursor of the [`Widget`], if there is any.
+    fn text_cursor(
+        &self,
+        _state: &Tree,
+        _layout: Layout<'_>,
+        _renderer: &Renderer,
+    ) -> bool {
+        false
+    }
+
     /// Returns the overlay of the [`Widget`], if there is any.
     fn overlay<'a>(
         &'a mut self,

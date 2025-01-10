@@ -337,6 +337,19 @@ where
         )
     }
 
+    fn text_cursor(
+        &self,
+        tree: &Tree,
+        layout: Layout<'_>,
+        renderer: &Renderer,
+    ) -> bool {
+        self.content.as_widget().text_cursor(
+            tree,
+            layout.children().next().unwrap(),
+            renderer,
+        )
+    }
+
     fn draw(
         &self,
         tree: &Tree,

@@ -723,8 +723,6 @@ async fn run_instance<P, C>(
                     clipboard = Clipboard::connect(window.raw.clone());
                 }
 
-                window.raw.set_ime_allowed(true);
-
                 let _ = on_open.send(id);
                 is_window_opening = false;
             }
@@ -842,7 +840,7 @@ async fn run_instance<P, C>(
                         );
 
                         debug.draw_started();
-                        let new_mouse_interaction = ui.draw(
+                        let (new_mouse_interaction, has_caret) = ui.draw(
                             &mut window.renderer,
                             window.state.theme(),
                             &renderer::Style {
@@ -861,6 +859,8 @@ async fn run_instance<P, C>(
 
                             window.mouse_interaction = new_mouse_interaction;
                         }
+
+                        window.raw.set_ime_allowed(has_caret);
 
                         runtime.broadcast(subscription::Event::Interaction {
                             window: id,

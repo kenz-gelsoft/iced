@@ -440,7 +440,7 @@ where
         theme: &Theme,
         style: &renderer::Style,
         cursor: mouse::Cursor,
-    ) -> mouse::Interaction {
+    ) -> (mouse::Interaction, bool) {
         // TODO: Move to shell level (?)
         renderer.clear();
 
@@ -495,6 +495,12 @@ where
             &viewport,
         );
 
+        let has_caret = self.root.as_widget().text_cursor(
+            &self.state,
+            Layout::new(&self.base),
+            renderer,
+        );
+
         let base_interaction = self.root.as_widget().mouse_interaction(
             &self.state,
             Layout::new(&self.base),
@@ -515,7 +521,7 @@ where
         //
         // Once we have a proper persistent widget tree, we should be able to
         // avoid this additional call.
-        overlay
+        let mouse_interaction = overlay
             .as_ref()
             .and_then(|layout| {
                 root.as_widget_mut()
@@ -559,7 +565,9 @@ where
                         }
                     })
             })
-            .unwrap_or(base_interaction)
+            .unwrap_or(base_interaction);
+        
+        (mouse_interaction, has_caret)
     }
 
     /// Applies a [`widget::Operation`] to the [`UserInterface`].
