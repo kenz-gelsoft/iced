@@ -26,7 +26,7 @@ pub enum Event {
     Touch(touch::Event),
 
     /// A input method event
-    InputMethod(input_method::Event),        
+    InputMethod(input_method::Event),
 }
 
 /// The status of an [`Event`] after being processed.

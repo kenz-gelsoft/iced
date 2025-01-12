@@ -5,7 +5,9 @@ use crate::core::mouse;
 use crate::core::renderer;
 use crate::core::widget;
 use crate::core::window;
-use crate::core::{Clipboard, Element, Layout, Rectangle, Shell, Size, Vector};
+use crate::core::{
+    CaretInfo, Clipboard, Element, Layout, Rectangle, Shell, Size, Vector,
+};
 use crate::overlay;
 
 /// A set of interactive graphical elements with a specific [`Layout`].
@@ -358,7 +360,10 @@ where
             if outdated {
                 State::Outdated
             } else {
-                State::Updated { redraw_request, caret_info }
+                State::Updated {
+                    redraw_request,
+                    caret_info,
+                }
             },
             event_statuses,
         )
@@ -650,6 +655,6 @@ pub enum State {
         /// The [`window::RedrawRequest`] when a redraw should be performed.
         redraw_request: Option<window::RedrawRequest>,
         /// TODO
-        caret_info: Option<bool>,
+        caret_info: Option<CaretInfo>,
     },
 }

@@ -882,9 +882,9 @@ async fn run_instance<P, C>(
                                 }
                             }
                             if let Some(caret_info) = caret_info {
-                                window.raw.set_ime_allowed(caret_info);
+                                window.raw.set_ime_allowed(caret_info.allowed);
                             }
-                }
+                        }
 
                         debug.render_started();
                         match compositor.present(
@@ -1047,9 +1047,11 @@ async fn run_instance<P, C>(
                                         }
                                     }
                                     if let Some(caret_info) = caret_info {
-                                        window.raw.set_ime_allowed(caret_info);
+                                        window.raw.set_ime_allowed(
+                                            caret_info.allowed,
+                                        );
                                     }
-                                },
+                                }
                                 user_interface::State::Outdated => {
                                     uis_stale = true;
                                 }
