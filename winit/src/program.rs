@@ -723,7 +723,7 @@ async fn run_instance<P, C>(
                     clipboard = Clipboard::connect(window.raw.clone());
                 }
 
-                window.raw.set_ime_allowed(true);
+                // window.raw.set_ime_allowed(true);
 
                 let _ = on_open.send(id);
                 is_window_opening = false;
@@ -870,6 +870,7 @@ async fn run_instance<P, C>(
 
                         if let user_interface::State::Updated {
                             redraw_request: Some(redraw_request),
+                            caret_info,
                         } = ui_state
                         {
                             match redraw_request {
@@ -880,7 +881,10 @@ async fn run_instance<P, C>(
                                     window.redraw_at = Some(at);
                                 }
                             }
-                        }
+                            if let Some(caret_info) = caret_info {
+                                window.raw.set_ime_allowed(caret_info);
+                            }
+                }
 
                         debug.render_started();
                         match compositor.present(
@@ -1032,12 +1036,18 @@ async fn run_instance<P, C>(
                                 ))]
                                 user_interface::State::Updated {
                                     redraw_request: Some(redraw_request),
-                                } => match redraw_request {
-                                    window::RedrawRequest::NextFrame => {
-                                        window.raw.request_redraw();
+                                    caret_info,
+                                } => {
+                                    match redraw_request {
+                                        window::RedrawRequest::NextFrame => {
+                                            window.raw.request_redraw();
+                                        }
+                                        window::RedrawRequest::At(at) => {
+                                            window.redraw_at = Some(at);
+                                        }
                                     }
-                                    window::RedrawRequest::At(at) => {
-                                        window.redraw_at = Some(at);
+                                    if let Some(caret_info) = caret_info {
+                                        window.raw.set_ime_allowed(caret_info);
                                     }
                                 },
                                 user_interface::State::Outdated => {
