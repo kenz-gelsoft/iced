@@ -1282,6 +1282,12 @@ where
             Status::Active
         };
 
+        shell.update_caret_info(if state.is_focused() {
+            Some(true)
+        } else {
+            None
+        });
+
         if let Event::Window(window::Event::RedrawRequested(_now)) = event {
             self.last_status = Some(status);
         } else if self

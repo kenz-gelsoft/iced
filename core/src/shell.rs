@@ -15,6 +15,7 @@ pub struct Shell<'a, Message> {
     redraw_request: Option<window::RedrawRequest>,
     is_layout_invalid: bool,
     are_widgets_invalid: bool,
+    caret_info: Option<bool>,
 }
 
 impl<'a, Message> Shell<'a, Message> {
@@ -26,6 +27,7 @@ impl<'a, Message> Shell<'a, Message> {
             redraw_request: None,
             is_layout_invalid: false,
             are_widgets_invalid: false,
+            caret_info: None,
         }
     }
 
@@ -80,6 +82,16 @@ impl<'a, Message> Shell<'a, Message> {
         self.redraw_request
     }
 
+    /// TODO
+    pub fn update_caret_info(&mut self, caret_info: Option<bool>) {
+        self.caret_info = self.caret_info.or(caret_info);
+    }
+
+    /// TODO
+    pub fn caret_info(&self) -> Option<bool> {
+        self.caret_info
+    }
+
     /// Returns whether the current layout is invalid or not.
     pub fn is_layout_invalid(&self) -> bool {
         self.is_layout_invalid
@@ -129,6 +141,8 @@ impl<'a, Message> Shell<'a, Message> {
                     .unwrap_or(new),
             );
         }
+
+        self.update_caret_info(other.caret_info());
 
         self.is_layout_invalid =
             self.is_layout_invalid || other.is_layout_invalid;
