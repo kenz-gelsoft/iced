@@ -2,6 +2,13 @@ use crate::event;
 use crate::time::Instant;
 use crate::window;
 
+/// TODO
+#[derive(Clone, Copy, Debug)]
+pub struct CaretInfo {
+    /// TODO
+    pub allowed: bool,
+}
+
 /// A connection to the state of a shell.
 ///
 /// A [`Widget`] can leverage a [`Shell`] to trigger changes in an application,
@@ -15,7 +22,7 @@ pub struct Shell<'a, Message> {
     redraw_request: Option<window::RedrawRequest>,
     is_layout_invalid: bool,
     are_widgets_invalid: bool,
-    caret_info: Option<bool>,
+    caret_info: Option<CaretInfo>,
 }
 
 impl<'a, Message> Shell<'a, Message> {
@@ -83,12 +90,12 @@ impl<'a, Message> Shell<'a, Message> {
     }
 
     /// TODO
-    pub fn update_caret_info(&mut self, caret_info: Option<bool>) {
+    pub fn update_caret_info(&mut self, caret_info: Option<CaretInfo>) {
         self.caret_info = self.caret_info.or(caret_info);
     }
 
     /// TODO
-    pub fn caret_info(&self) -> Option<bool> {
+    pub fn caret_info(&self) -> Option<CaretInfo> {
         self.caret_info
     }
 

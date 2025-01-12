@@ -57,8 +57,8 @@ use crate::core::widget::operation::{self, Operation};
 use crate::core::widget::tree::{self, Tree};
 use crate::core::window;
 use crate::core::{
-    Background, Border, Color, Element, Event, Layout, Length, Padding, Pixels,
-    Point, Rectangle, Shell, Size, Theme, Vector, Widget,
+    Background, Border, CaretInfo, Color, Element, Event, Layout, Length,
+    Padding, Pixels, Point, Rectangle, Shell, Size, Theme, Vector, Widget,
 };
 use crate::runtime::task::{self, Task};
 use crate::runtime::Action;
@@ -1283,7 +1283,7 @@ where
         };
 
         shell.update_caret_info(if state.is_focused() {
-            Some(true)
+            Some(CaretInfo { allowed: true })
         } else {
             None
         });

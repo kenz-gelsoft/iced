@@ -1195,7 +1195,7 @@ impl<Message> Update<Message> {
             Event::InputMethod(input_method::Event::Commit(string)) => {
                 println!("Commit!");
                 None
-            },
+            }
             Event::Keyboard(keyboard::Event::KeyPressed {
                 key,
                 modifiers,

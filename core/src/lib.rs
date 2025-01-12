@@ -73,6 +73,7 @@ pub use renderer::Renderer;
 pub use rotation::Rotation;
 pub use settings::Settings;
 pub use shadow::Shadow;
+pub use shell::CaretInfo;
 pub use shell::Shell;
 pub use size::Size;
 pub use svg::Svg;

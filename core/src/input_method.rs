@@ -10,7 +10,6 @@
 pub enum Event {
     // These events correspond to underlying winit ime events.
     // https://docs.rs/winit/latest/winit/event/enum.Ime.html
-
     /// the IME was enabled.
     Enabled,
 
