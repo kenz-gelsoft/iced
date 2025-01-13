@@ -47,8 +47,8 @@ use crate::core::widget::operation;
 use crate::core::widget::{self, Widget};
 use crate::core::window;
 use crate::core::{
-    Background, Border, CaretInfo, Color, Element, Event, Length, Padding, Pixels, Point,
-    Rectangle, Shell, Size, SmolStr, Theme, Vector,
+    Background, Border, CaretInfo, Color, Element, Event, Length, Padding,
+    Pixels, Point, Rectangle, Shell, Size, SmolStr, Theme, Vector,
 };
 
 use std::borrow::Cow;
@@ -340,25 +340,26 @@ where
 
         if let Some(_) = state.focus.as_ref() {
             let position = match internal.editor.cursor() {
-                Cursor::Caret(position) => {
-                    position
-                }
-                Cursor::Selection(ranges) => {
-                    ranges.first().cloned().unwrap_or(Rectangle::default()).position()
-                }
+                Cursor::Caret(position) => position,
+                Cursor::Selection(ranges) => ranges
+                    .first()
+                    .cloned()
+                    .unwrap_or(Rectangle::default())
+                    .position(),
             };
             Some(Rectangle::new(
                 position + translation,
                 Size::new(
                     1.0,
                     self.line_height
-                        .to_absolute(self.text_size.unwrap_or_else(
-                            || renderer.default_size(),
-                        ))
+                        .to_absolute(
+                            self.text_size
+                                .unwrap_or_else(|| renderer.default_size()),
+                        )
                         .into(),
                 ),
             ))
-} else {
+        } else {
             None
         }
     }
@@ -871,7 +872,9 @@ where
         };
 
         shell.update_caret_info(if state.is_focused() {
-            let rect = self.caret_rect(tree, renderer, layout).unwrap_or(Rectangle::default());
+            let rect = self
+                .caret_rect(tree, renderer, layout)
+                .unwrap_or(Rectangle::default());
             let bottom_left = Point::new(rect.x, rect.y + rect.height);
             Some(CaretInfo {
                 allowed: true,
