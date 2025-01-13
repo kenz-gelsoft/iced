@@ -419,15 +419,22 @@ where
                     left
                 }
             };
-            let (caret_x, _) = measure_cursor_and_scroll_offset(
-                state.value.raw(),
+            let text = state.value.raw();
+            let (caret_x, offset) = measure_cursor_and_scroll_offset(
+                text,
                 text_bounds,
                 caret_index,
+            );
+            
+            let alignment_offset = alignment_offset(
+                text_bounds.width,
+                text.min_width(),
+                self.alignment,
             );
 
             let x = (text_bounds.x + caret_x).floor();
             Some(Rectangle {
-                x,
+                x: (alignment_offset - offset) + x,
                 y: text_bounds.y,
                 width: 1.0,
                 height: text_bounds.height,
@@ -1330,7 +1337,7 @@ where
         shell.update_caret_info(if state.is_focused() {
             let rect = self
                 .caret_rect(tree, layout, Some(&self.value))
-                .unwrap_or(Rectangle::<f32>::with_size(Size::<f32>::default()));
+                .unwrap_or(Rectangle::with_size(Size::<f32>::default()));
             let bottom_left = Point::new(rect.x, rect.y + rect.height);
             Some(CaretInfo {
                 allowed: true,
