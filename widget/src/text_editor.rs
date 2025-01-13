@@ -47,7 +47,7 @@ use crate::core::widget::operation;
 use crate::core::widget::{self, Widget};
 use crate::core::window;
 use crate::core::{
-    Background, Border, Color, Element, Event, Length, Padding, Pixels, Point,
+    Background, Border, CaretInfo, Color, Element, Event, Length, Padding, Pixels, Point,
     Rectangle, Shell, Size, SmolStr, Theme, Vector,
 };
 
@@ -303,6 +303,45 @@ where
     pub fn class(mut self, class: impl Into<Theme::Class<'a>>) -> Self {
         self.class = class.into();
         self
+    }
+
+    fn caret_rect(
+        &self,
+        tree: &widget::Tree,
+        renderer: &Renderer,
+        layout: Layout<'_>,
+    ) -> Option<Rectangle> {
+        let bounds = layout.bounds();
+
+        let internal = self.content.0.borrow_mut();
+        let state = tree.state.downcast_ref::<State<Highlighter>>();
+
+        let text_bounds = bounds.shrink(self.padding);
+        let translation = text_bounds.position() - Point::ORIGIN;
+
+        if let Some(_) = state.focus.as_ref() {
+            let position = match internal.editor.cursor() {
+                Cursor::Caret(position) => {
+                    position
+                }
+                Cursor::Selection(ranges) => {
+                    ranges.first().cloned().unwrap_or(Rectangle::default()).position()
+                }
+            };
+            Some(Rectangle::new(
+                position + translation,
+                Size::new(
+                    1.0,
+                    self.line_height
+                        .to_absolute(self.text_size.unwrap_or_else(
+                            || renderer.default_size(),
+                        ))
+                        .into(),
+                ),
+            ))
+} else {
+            None
+        }
     }
 }
 
@@ -605,7 +644,7 @@ where
         event: Event,
         layout: Layout<'_>,
         cursor: mouse::Cursor,
-        _renderer: &Renderer,
+        renderer: &Renderer,
         clipboard: &mut dyn Clipboard,
         shell: &mut Shell<'_, Message>,
         _viewport: &Rectangle,
@@ -700,6 +739,11 @@ where
                         lines: lines as i32,
                     }));
                     shell.capture_event();
+                }
+                Update::Commit(text) => {
+                    shell.publish(on_edit(Action::Edit(Edit::Paste(
+                        Arc::new(text),
+                    ))));
                 }
                 Update::Binding(binding) => {
                     fn apply_binding<
@@ -822,6 +866,17 @@ where
                 Status::Active
             }
         };
+
+        shell.update_caret_info(if state.is_focused() {
+            let rect = self.caret_rect(tree, renderer, layout).unwrap_or(Rectangle::default());
+            let bottom_left = Point::new(rect.x, rect.y + rect.height);
+            Some(CaretInfo {
+                allowed: true,
+                position: bottom_left,
+            })
+        } else {
+            None
+        });
 
         if is_redraw {
             self.last_status = Some(status);
@@ -1127,6 +1182,7 @@ enum Update<Message> {
     Drag(Point),
     Release,
     Scroll(f32),
+    Commit(String),
     Binding(Binding<Message>),
 }
 
@@ -1189,9 +1245,8 @@ impl<Message> Update<Message> {
                 }
                 _ => None,
             },
-            Event::InputMethod(input_method::Event::Commit(string)) => {
-                println!("Commit!");
-                None
+            Event::InputMethod(input_method::Event::Commit(text)) => {
+                Some(Update::Commit(text))
             }
             Event::Keyboard(keyboard::Event::KeyPressed {
                 key,
