@@ -425,7 +425,7 @@ where
                 text_bounds,
                 caret_index,
             );
-            
+
             let alignment_offset = alignment_offset(
                 text_bounds.width,
                 text.min_width(),
