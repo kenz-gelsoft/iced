@@ -1,12 +1,14 @@
-use crate::event;
 use crate::time::Instant;
 use crate::window;
+use crate::{event, Point};
 
 /// TODO
 #[derive(Clone, Copy, Debug)]
 pub struct CaretInfo {
     /// TODO
     pub allowed: bool,
+    /// TODO
+    pub position: Point,
 }
 
 /// A connection to the state of a shell.

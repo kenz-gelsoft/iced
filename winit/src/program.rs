@@ -3,6 +3,8 @@ mod state;
 mod window_manager;
 
 pub use state::State;
+use winit::dpi::LogicalPosition;
+use winit::dpi::LogicalSize;
 
 use crate::conversion;
 use crate::core;
@@ -714,8 +716,6 @@ async fn run_instance<P, C>(
                     clipboard = Clipboard::connect(window.raw.clone());
                 }
 
-                // window.raw.set_ime_allowed(true);
-
                 let _ = on_open.send(id);
                 is_window_opening = false;
             }
@@ -878,6 +878,13 @@ async fn run_instance<P, C>(
                             }
                             if let Some(caret_info) = caret_info {
                                 window.raw.set_ime_allowed(caret_info.allowed);
+                                window.raw.set_ime_cursor_area(
+                                    LogicalPosition::new(
+                                        caret_info.position.x,
+                                        caret_info.position.y,
+                                    ),
+                                    LogicalSize::new(10, 10),
+                                );
                             }
                         }
 
@@ -1044,6 +1051,13 @@ async fn run_instance<P, C>(
                                     if let Some(caret_info) = caret_info {
                                         window.raw.set_ime_allowed(
                                             caret_info.allowed,
+                                        );
+                                        window.raw.set_ime_cursor_area(
+                                            LogicalPosition::new(
+                                                caret_info.position.x,
+                                                caret_info.position.y,
+                                            ),
+                                            LogicalSize::new(10, 10),
                                         );
                                     }
                                 }
