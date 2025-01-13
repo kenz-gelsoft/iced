@@ -392,6 +392,51 @@ where
         }
     }
 
+    fn caret_rect(
+        &self,
+        tree: &Tree,
+        layout: Layout<'_>,
+        value: Option<&Value>,
+    ) -> Option<Rectangle> {
+        let state = tree.state.downcast_ref::<State<Renderer::Paragraph>>();
+        let value = value.unwrap_or(&self.value);
+
+        let secure_value = self.is_secure.then(|| value.secure());
+        let value = secure_value.as_ref().unwrap_or(value);
+
+        let mut children_layout = layout.children();
+        let text_bounds = children_layout.next().unwrap().bounds();
+
+        if let Some(_) = state
+            .is_focused
+            .as_ref()
+            .filter(|focus| focus.is_window_focused)
+        {
+            let caret_index = match state.cursor.state(value) {
+                cursor::State::Index(position) => position,
+                cursor::State::Selection { start, end } => {
+                    let left = start.min(end);
+                    left
+                }
+            };
+            let (caret_x, _) = measure_cursor_and_scroll_offset(
+                state.value.raw(),
+                text_bounds,
+                caret_index,
+            );
+
+            let x = (text_bounds.x + caret_x).floor();
+            Some(Rectangle {
+                x,
+                y: text_bounds.y,
+                width: 1.0,
+                height: text_bounds.height,
+            })
+        } else {
+            None
+        }
+    }
+
     /// Draws the [`TextInput`] with the given [`Renderer`], overriding its
     /// [`Value`] if provided.
     ///
@@ -1283,7 +1328,14 @@ where
         };
 
         shell.update_caret_info(if state.is_focused() {
-            Some(CaretInfo { allowed: true })
+            let rect = self
+                .caret_rect(tree, layout, Some(&self.value))
+                .unwrap_or(Rectangle::<f32>::with_size(Size::<f32>::default()));
+            let bottom_left = Point::new(rect.x, rect.y + rect.height);
+            Some(CaretInfo {
+                allowed: true,
+                position: bottom_left,
+            })
         } else {
             None
         });
