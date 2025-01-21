@@ -882,6 +882,13 @@ async fn run_instance<P, C>(
                                 }
                             }
                             if let Some(caret_info) = caret_info {
+                                fill_preedit::<P>(
+                                    &mut window.renderer,
+                                    window.state.preedit(),
+                                    window.state.logical_size(),
+                                    caret_info.position,
+                                );
+
                                 window.raw.set_ime_allowed(caret_info.allowed);
                                 window.raw.set_ime_cursor_area(
                                     LogicalPosition::new(
@@ -1156,6 +1163,33 @@ async fn run_instance<P, C>(
     }
 
     let _ = ManuallyDrop::into_inner(user_interfaces);
+}
+
+fn fill_preedit<P: Program>(
+    renderer: &mut P::Renderer,
+    content: String,
+    bounds: Size,
+    caret_position: Point,
+) {
+    use core::text::Renderer as _;
+
+    let text = core::Text {
+        content,
+        bounds,
+        size: renderer.default_size(),
+        line_height: core::text::LineHeight::default(),
+        font: renderer.default_font(),
+        horizontal_alignment: core::alignment::Horizontal::Left,
+        vertical_alignment: core::alignment::Vertical::Bottom,
+        shaping: core::text::Shaping::Advanced,
+        wrapping: core::text::Wrapping::None,
+    };
+    renderer.fill_text(
+        text,
+        caret_position,
+        core::Color::BLACK,
+        core::Rectangle::with_size(bounds),
+    );
 }
 
 /// Builds a window's [`UserInterface`] for the [`Program`].
