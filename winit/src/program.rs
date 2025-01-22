@@ -864,17 +864,18 @@ async fn run_instance<P, C>(
                         });
 
                         if let user_interface::State::Updated {
-                            redraw_request: Some(redraw_request),
+                            redraw_request,
                             caret_info,
                         } = ui_state
                         {
                             match redraw_request {
-                                window::RedrawRequest::NextFrame => {
+                                Some(window::RedrawRequest::NextFrame) => {
                                     window.raw.request_redraw();
                                 }
-                                window::RedrawRequest::At(at) => {
+                                Some(window::RedrawRequest::At(at)) => {
                                     window.redraw_at = Some(at);
                                 }
+                                None => {}
                             }
                             if let Some(caret_info) = caret_info {
                                 fill_preedit::<P>(
@@ -1166,6 +1167,7 @@ fn fill_preedit<P: Program>(
     bounds: Size,
     caret_position: Point,
 ) {
+    use core::Renderer as _;
     use core::text::Renderer as _;
 
     let text = core::Text {
@@ -1179,12 +1181,15 @@ fn fill_preedit<P: Program>(
         shaping: core::text::Shaping::Advanced,
         wrapping: core::text::Wrapping::None,
     };
-    renderer.fill_text(
-        text,
-        caret_position,
-        core::Color::BLACK,
-        core::Rectangle::with_size(bounds),
-    );
+    let bounds = core::Rectangle::with_size(bounds);
+    renderer.with_layer(bounds, |renderer| {
+        renderer.fill_text(
+            text,
+            caret_position,
+            core::Color::BLACK,
+            bounds,
+        );
+    });
 }
 
 /// Builds a window's [`UserInterface`] for the [`Program`].
