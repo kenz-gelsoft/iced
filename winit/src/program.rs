@@ -1045,18 +1045,28 @@ async fn run_instance<P, C>(
                                     feature = "unconditional-rendering"
                                 ))]
                                 user_interface::State::Updated {
-                                    redraw_request: Some(redraw_request),
+                                    redraw_request,
                                     caret_info,
                                 } => {
                                     match redraw_request {
-                                        window::RedrawRequest::NextFrame => {
+                                        Some(
+                                            window::RedrawRequest::NextFrame,
+                                        ) => {
                                             window.raw.request_redraw();
                                         }
-                                        window::RedrawRequest::At(at) => {
+                                        Some(window::RedrawRequest::At(at)) => {
                                             window.redraw_at = Some(at);
                                         }
+                                        None => {}
                                     }
                                     if let Some(caret_info) = caret_info {
+                                        fill_preedit::<P>(
+                                            &mut window.renderer,
+                                            window.state.preedit(),
+                                            window.state.logical_size(),
+                                            caret_info.position,
+                                        );
+
                                         window.raw.set_ime_allowed(
                                             caret_info.allowed,
                                         );
@@ -1072,7 +1082,6 @@ async fn run_instance<P, C>(
                                 user_interface::State::Outdated => {
                                     uis_stale = true;
                                 }
-                                user_interface::State::Updated { .. } => {}
                             }
 
                             for (event, status) in window_events
@@ -1167,8 +1176,8 @@ fn fill_preedit<P: Program>(
     bounds: Size,
     caret_position: Point,
 ) {
-    use core::Renderer as _;
     use core::text::Renderer as _;
+    use core::Renderer as _;
 
     let text = core::Text {
         content,
@@ -1183,12 +1192,7 @@ fn fill_preedit<P: Program>(
     };
     let bounds = core::Rectangle::with_size(bounds);
     renderer.with_layer(bounds, |renderer| {
-        renderer.fill_text(
-            text,
-            caret_position,
-            core::Color::BLACK,
-            bounds,
-        );
+        renderer.fill_text(text, caret_position, core::Color::BLACK, bounds);
     });
 }
 
