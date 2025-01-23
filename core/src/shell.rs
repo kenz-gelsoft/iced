@@ -93,7 +93,7 @@ impl<'a, Message> Shell<'a, Message> {
 
     /// TODO
     pub fn update_caret_info(&mut self, caret_info: Option<CaretInfo>) {
-        self.caret_info = self.caret_info.or(caret_info);
+        self.caret_info = caret_info.or(self.caret_info);
     }
 
     /// TODO
