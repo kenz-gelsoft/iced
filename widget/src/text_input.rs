@@ -698,7 +698,7 @@ where
         renderer: &Renderer,
         clipboard: &mut dyn Clipboard,
         shell: &mut Shell<'_, Message>,
-        _viewport: &Rectangle,
+        viewport: &Rectangle,
     ) {
         let update_cache = |state, value| {
             replace_paragraph(
@@ -1338,7 +1338,9 @@ where
             let rect = self
                 .caret_rect(tree, layout, Some(&self.value))
                 .unwrap_or(Rectangle::with_size(Size::<f32>::default()));
-            let bottom_left = Point::new(rect.x, rect.y + rect.height);
+            let offset = viewport.position();
+            let bottom_left =
+                Point::new(rect.x - offset.x, rect.y - offset.y + rect.height);
             Some(CaretInfo {
                 allowed: true,
                 position: bottom_left,

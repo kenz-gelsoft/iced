@@ -649,7 +649,7 @@ where
         renderer: &Renderer,
         clipboard: &mut dyn Clipboard,
         shell: &mut Shell<'_, Message>,
-        _viewport: &Rectangle,
+        viewport: &Rectangle,
     ) {
         let Some(on_edit) = self.on_edit.as_ref() else {
             return;
@@ -875,7 +875,9 @@ where
             let rect = self
                 .caret_rect(tree, renderer, layout)
                 .unwrap_or(Rectangle::default());
-            let bottom_left = Point::new(rect.x, rect.y + rect.height);
+            let offset = viewport.position();
+            let bottom_left =
+                Point::new(rect.x - offset.x, rect.y - offset.y + rect.height);
             Some(CaretInfo {
                 allowed: true,
                 position: bottom_left,
