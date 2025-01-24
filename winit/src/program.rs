@@ -2,6 +2,7 @@
 mod state;
 mod window_manager;
 
+use iced_graphics::color;
 pub use state::State;
 use winit::dpi::LogicalPosition;
 use winit::dpi::LogicalSize;
@@ -1077,7 +1078,7 @@ async fn run_instance<P, C>(
                                             LogicalSize::new(10, 10),
                                         );
                                     }
-                                    
+
                                     match redraw_request {
                                         Some(
                                             window::RedrawRequest::NextFrame,
@@ -1191,24 +1192,38 @@ fn fill_preedit<P: Program>(
     bounds: Size,
     caret_position: Point,
 ) {
+    if content.is_empty() {
+        return;
+    }
+
+    use core::text::paragraph::Paragraph as _;
     use core::text::Renderer as _;
     use core::Renderer as _;
 
     let text = core::Text {
-        content,
+        content: "test",//content.as_ref(),
+        // content: content,
         bounds,
         size: renderer.default_size(),
         line_height: core::text::LineHeight::default(),
         font: renderer.default_font(),
         horizontal_alignment: core::alignment::Horizontal::Left,
         vertical_alignment: core::alignment::Vertical::Bottom,
-        shaping: core::text::Shaping::Advanced,
+        // shaping: core::text::Shaping::Advanced,
+        shaping: core::text::Shaping::Basic,
         wrapping: core::text::Wrapping::None,
     };
+    let paragraph = <P::Renderer as core::text::Renderer>::Paragraph::with_text(text);
     let bounds = core::Rectangle::with_size(bounds);
-    renderer.with_layer(bounds, |renderer| {
-        renderer.fill_text(text, caret_position, core::Color::BLACK, bounds);
-    });
+    renderer.fill_paragraph(
+        &paragraph,
+        caret_position,
+        core::Color::BLACK,
+        bounds,
+    );
+    // renderer.with_layer(bounds, |renderer| {
+    //     renderer.fill_text(text, caret_position, core::Color::BLACK, bounds);
+    // });
 }
 
 /// Builds a window's [`UserInterface`] for the [`Program`].
