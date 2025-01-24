@@ -873,15 +873,6 @@ async fn run_instance<P, C>(
                             caret_info,
                         } = ui_state
                         {
-                            match redraw_request {
-                                Some(window::RedrawRequest::NextFrame) => {
-                                    window.raw.request_redraw();
-                                }
-                                Some(window::RedrawRequest::At(at)) => {
-                                    window.redraw_at = Some(at);
-                                }
-                                None => {}
-                            }
                             if let Some(caret_info) = caret_info {
                                 fill_preedit::<P>(
                                     &mut window.renderer,
@@ -898,6 +889,20 @@ async fn run_instance<P, C>(
                                     ),
                                     LogicalSize::new(10, 10),
                                 );
+                            }
+
+                            match redraw_request {
+                                Some(window::RedrawRequest::NextFrame) => {
+                                    window.raw.request_redraw();
+                                }
+                                Some(window::RedrawRequest::At(at)) => {
+                                    window.redraw_at = Some(at);
+                                }
+                                None => {
+                                    if caret_info.is_some() {
+                                        window.raw.request_redraw();
+                                    }
+                                }
                             }
                         }
 
@@ -1053,17 +1058,6 @@ async fn run_instance<P, C>(
                                     redraw_request,
                                     caret_info,
                                 } => {
-                                    match redraw_request {
-                                        Some(
-                                            window::RedrawRequest::NextFrame,
-                                        ) => {
-                                            window.raw.request_redraw();
-                                        }
-                                        Some(window::RedrawRequest::At(at)) => {
-                                            window.redraw_at = Some(at);
-                                        }
-                                        None => {}
-                                    }
                                     if let Some(caret_info) = caret_info {
                                         fill_preedit::<P>(
                                             &mut window.renderer,
@@ -1082,6 +1076,22 @@ async fn run_instance<P, C>(
                                             ),
                                             LogicalSize::new(10, 10),
                                         );
+                                    }
+                                    
+                                    match redraw_request {
+                                        Some(
+                                            window::RedrawRequest::NextFrame,
+                                        ) => {
+                                            window.raw.request_redraw();
+                                        }
+                                        Some(window::RedrawRequest::At(at)) => {
+                                            window.redraw_at = Some(at);
+                                        }
+                                        None => {
+                                            if caret_info.is_some() {
+                                                window.raw.request_redraw();
+                                            }
+                                        }
                                     }
                                 }
                                 user_interface::State::Outdated => {
