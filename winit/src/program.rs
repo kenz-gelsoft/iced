@@ -1196,7 +1196,7 @@ fn fill_preedit<P: Program>(
         return;
     }
 
-    use core::text::paragraph::Paragraph as _;
+    use core::text::paragraph::{Plain, Paragraph as _};
     use core::text::Renderer as _;
     use core::Renderer as _;
 
@@ -1213,10 +1213,12 @@ fn fill_preedit<P: Program>(
         shaping: core::text::Shaping::Basic,
         wrapping: core::text::Wrapping::None,
     };
-    let paragraph = <P::Renderer as core::text::Renderer>::Paragraph::with_text(text);
+    
+    let plain = core::text::paragraph::Plain::<<P::Renderer as core::text::Renderer>::Paragraph>::new(text);
+    // let paragraph = <P::Renderer as core::text::Renderer>::Paragraph::with_text(text);
     let bounds = core::Rectangle::with_size(bounds);
     renderer.fill_paragraph(
-        &paragraph,
+        plain.raw(),
         caret_position,
         core::Color::BLACK,
         bounds,
