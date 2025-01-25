@@ -1200,8 +1200,12 @@ fn fill_preedit<P: Program>(
     use core::text::Renderer as _;
     use core::Renderer as _;
 
+    let span = core::text::Span::new("hello").color(crate::core::color!(0, 0, 0));
+    let spans: &[core::text::Span<'_, (), <P::Renderer as core::text::Renderer>::Font>] = &[
+        span,
+    ];
     let text = core::Text {
-        content: "test",//content.as_ref(),
+        content: spans,//"test",//content.as_ref(),
         // content: content,
         bounds,
         size: renderer.default_size(),
@@ -1214,11 +1218,12 @@ fn fill_preedit<P: Program>(
         wrapping: core::text::Wrapping::None,
     };
     
-    let plain = core::text::paragraph::Plain::<<P::Renderer as core::text::Renderer>::Paragraph>::new(text);
-    // let paragraph = <P::Renderer as core::text::Renderer>::Paragraph::with_text(text);
+    // let plain = core::text::paragraph::Plain::<<P::Renderer as core::text::Renderer>::Paragraph>::new(text);
+    let paragraph = <P::Renderer as core::text::Renderer>::Paragraph::with_spans(text);
     let bounds = core::Rectangle::with_size(bounds);
     renderer.fill_paragraph(
-        plain.raw(),
+        // plain.raw(),
+        &paragraph,
         caret_position,
         core::Color::BLACK,
         bounds,
