@@ -33,8 +33,9 @@ use crate::core::widget::operation::{self, Operation};
 use crate::core::widget::tree::{self, Tree};
 use crate::core::window;
 use crate::core::{
-    self, Background, Clipboard, Color, Element, Event, Layout, Length,
-    Padding, Pixels, Point, Rectangle, Shell, Size, Theme, Vector, Widget,
+    self, Background, CaretInfo, Clipboard, Color, Element, Event, Layout,
+    Length, Padding, Pixels, Point, Rectangle, Shell, Size, Theme, Vector,
+    Widget,
 };
 use crate::runtime::task::{self, Task};
 use crate::runtime::Action;
@@ -743,6 +744,16 @@ where
                         ..bounds
                     },
                 );
+
+                if let Some(caret_info) = shell.caret_info() {
+                    shell.update_caret_info(Some(CaretInfo {
+                        allowed: caret_info.allowed,
+                        position: Point::new(
+                            caret_info.position.x - translation.x,
+                            caret_info.position.y - translation.y,
+                        ),
+                    }));
+                }
             };
 
             if matches!(
