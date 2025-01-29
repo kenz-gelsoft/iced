@@ -581,6 +581,8 @@ async fn run_instance<P, C>(
     let mut clipboard = Clipboard::unconnected();
     let mut compositor_receiver: Option<oneshot::Receiver<_>> = None;
 
+    let mut preedit: Preedit<P>;
+
     debug.startup_finished();
 
     loop {
@@ -869,12 +871,17 @@ async fn run_instance<P, C>(
                         } = ui_state
                         {
                             if let Some(caret_info) = caret_info {
-                                fill_preedit::<P>(
-                                    &mut window.renderer,
-                                    window.state.preedit(),
-                                    window.state.logical_size(),
-                                    caret_info.position,
-                                );
+                                let text = window.state.preedit();
+                                if !text.is_empty() {
+                                    preedit = Preedit::<P>::new(
+                                        Some(text.as_str()),
+                                        &window.renderer,
+                                    );
+                                    preedit.fill(
+                                        &mut window.renderer,
+                                        caret_info.position,
+                                    );
+                                }
 
                                 window.raw.set_ime_allowed(caret_info.allowed);
                                 window.raw.set_ime_cursor_area(
@@ -1054,12 +1061,21 @@ async fn run_instance<P, C>(
                                     caret_info,
                                 } => {
                                     if let Some(caret_info) = caret_info {
-                                        fill_preedit::<P>(
-                                            &mut window.renderer,
-                                            window.state.preedit(),
-                                            window.state.logical_size(),
-                                            caret_info.position,
-                                        );
+                                        if !window.state.preedit().is_empty() {
+                                            preedit = Preedit::<P>::new(
+                                                Some(
+                                                    window
+                                                        .state
+                                                        .preedit()
+                                                        .as_str(),
+                                                ),
+                                                &window.renderer,
+                                            );
+                                            preedit.fill(
+                                                &mut window.renderer,
+                                                caret_info.position,
+                                            );
+                                        }
 
                                         window.raw.set_ime_allowed(
                                             caret_info.allowed,
@@ -1072,7 +1088,7 @@ async fn run_instance<P, C>(
                                             LogicalSize::new(10, 10),
                                         );
                                     }
-                                    
+
                                     match redraw_request {
                                         Some(
                                             window::RedrawRequest::NextFrame,
@@ -1180,30 +1196,67 @@ async fn run_instance<P, C>(
     let _ = ManuallyDrop::into_inner(user_interfaces);
 }
 
-fn fill_preedit<P: Program>(
-    renderer: &mut P::Renderer,
-    content: String,
-    bounds: Size,
-    caret_position: Point,
-) {
-    use core::text::Renderer as _;
-    use core::Renderer as _;
+struct Preedit<P: Program> {
+    content: Option<<P::Renderer as core::text::Renderer>::Paragraph>,
+}
 
-    let text = core::Text {
-        content,
-        bounds,
-        size: renderer.default_size(),
-        line_height: core::text::LineHeight::default(),
-        font: renderer.default_font(),
-        horizontal_alignment: core::alignment::Horizontal::Left,
-        vertical_alignment: core::alignment::Vertical::Bottom,
-        shaping: core::text::Shaping::Advanced,
-        wrapping: core::text::Wrapping::None,
-    };
-    let bounds = core::Rectangle::with_size(bounds);
-    renderer.with_layer(bounds, |renderer| {
-        renderer.fill_text(text, caret_position, core::Color::BLACK, bounds);
-    });
+impl<P: Program> Preedit<P> {
+    fn new(text: Option<&str>, renderer: &P::Renderer) -> Self {
+        use core::text::Paragraph as _;
+        use core::text::Renderer as _;
+
+        if let Some(text) = text {
+            let content =
+                <P::Renderer as core::text::Renderer>::Paragraph::with_text(
+                    core::Text::<
+                        &str,
+                        <P::Renderer as core::text::Renderer>::Font,
+                    > {
+                        content: text,
+                        bounds: Size::INFINITY,
+                        size: renderer.default_size(),
+                        line_height: core::text::LineHeight::default(),
+                        font: renderer.default_font(),
+                        horizontal_alignment: core::alignment::Horizontal::Left,
+                        vertical_alignment: core::alignment::Vertical::Top, //Bottom,
+                        shaping: core::text::Shaping::Advanced,
+                        wrapping: core::text::Wrapping::None,
+                    },
+                );
+            Self {
+                content: Some(content),
+            }
+        } else {
+            Self { content: None }
+        }
+    }
+
+    fn fill(&self, renderer: &mut P::Renderer, caret_position: Point) {
+        use core::text::Paragraph as _;
+        use core::text::Renderer as _;
+        use core::Renderer as _;
+
+        let Some(ref content) = self.content else {
+            return;
+        };
+        if content.min_width() < 1.0 {
+            return;
+        }
+
+        let top_left = Point::new(
+            caret_position.x,
+            caret_position.y - content.min_height(),
+        );
+        let bounds2 = core::Rectangle::new(top_left, content.min_bounds());
+        renderer.with_layer(bounds2, |renderer| {
+            renderer.fill_paragraph(
+                content,
+                top_left,
+                core::Color::BLACK,
+                bounds2,
+            );
+        });
+    }
 }
 
 /// Builds a window's [`UserInterface`] for the [`Program`].
