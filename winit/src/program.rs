@@ -581,7 +581,7 @@ async fn run_instance<P, C>(
     let mut clipboard = Clipboard::unconnected();
     let mut compositor_receiver: Option<oneshot::Receiver<_>> = None;
 
-    let mut preedit: Preedit<P>;
+    let mut preedit = Preedit::<P>::new();
 
     debug.startup_finished();
 
@@ -871,25 +871,10 @@ async fn run_instance<P, C>(
                         } = ui_state
                         {
                             if let Some(caret_info) = caret_info {
-                                let text = window.state.preedit();
-                                if !text.is_empty() {
-                                    preedit = Preedit::<P>::new(
-                                        Some(text.as_str()),
-                                        &window.renderer,
-                                    );
-                                    preedit.fill(
-                                        &mut window.renderer,
-                                        caret_info.position,
-                                    );
-                                }
-
-                                window.raw.set_ime_allowed(caret_info.allowed);
-                                window.raw.set_ime_cursor_area(
-                                    LogicalPosition::new(
-                                        caret_info.position.x,
-                                        caret_info.position.y,
-                                    ),
-                                    LogicalSize::new(10, 10),
+                                update_input_method(
+                                    window,
+                                    &mut preedit,
+                                    &caret_info,
                                 );
                             }
 
@@ -1061,31 +1046,10 @@ async fn run_instance<P, C>(
                                     caret_info,
                                 } => {
                                     if let Some(caret_info) = caret_info {
-                                        if !window.state.preedit().is_empty() {
-                                            preedit = Preedit::<P>::new(
-                                                Some(
-                                                    window
-                                                        .state
-                                                        .preedit()
-                                                        .as_str(),
-                                                ),
-                                                &window.renderer,
-                                            );
-                                            preedit.fill(
-                                                &mut window.renderer,
-                                                caret_info.position,
-                                            );
-                                        }
-
-                                        window.raw.set_ime_allowed(
-                                            caret_info.allowed,
-                                        );
-                                        window.raw.set_ime_cursor_area(
-                                            LogicalPosition::new(
-                                                caret_info.position.x,
-                                                caret_info.position.y,
-                                            ),
-                                            LogicalSize::new(10, 10),
+                                        update_input_method(
+                                            window,
+                                            &mut preedit,
+                                            &caret_info,
                                         );
                                     }
 
@@ -1196,39 +1160,55 @@ async fn run_instance<P, C>(
     let _ = ManuallyDrop::into_inner(user_interfaces);
 }
 
+fn update_input_method<P, C>(
+    window: &mut crate::program::window_manager::Window<P, C>,
+    preedit: &mut Preedit<P>,
+    caret_info: &crate::core::CaretInfo,
+) where
+    P: Program,
+    C: Compositor<Renderer = P::Renderer> + 'static,
+{
+    window.raw.set_ime_allowed(caret_info.allowed);
+    window.raw.set_ime_cursor_area(
+        LogicalPosition::new(caret_info.position.x, caret_info.position.y),
+        LogicalSize::new(10, 10),
+    );
+
+    let text = window.state.preedit();
+    if !text.is_empty() {
+        preedit.update(text.as_str(), &window.renderer);
+        preedit.fill(&mut window.renderer, caret_info.position);
+    }
+}
+
 struct Preedit<P: Program> {
     content: Option<<P::Renderer as core::text::Renderer>::Paragraph>,
 }
 
 impl<P: Program> Preedit<P> {
-    fn new(text: Option<&str>, renderer: &P::Renderer) -> Self {
+    fn new() -> Self {
+        Self { content: None }
+    }
+
+    fn update(&mut self, text: &str, renderer: &P::Renderer) {
         use core::text::Paragraph as _;
         use core::text::Renderer as _;
 
-        if let Some(text) = text {
-            let content =
-                <P::Renderer as core::text::Renderer>::Paragraph::with_text(
-                    core::Text::<
-                        &str,
-                        <P::Renderer as core::text::Renderer>::Font,
-                    > {
-                        content: text,
-                        bounds: Size::INFINITY,
-                        size: renderer.default_size(),
-                        line_height: core::text::LineHeight::default(),
-                        font: renderer.default_font(),
-                        horizontal_alignment: core::alignment::Horizontal::Left,
-                        vertical_alignment: core::alignment::Vertical::Top, //Bottom,
-                        shaping: core::text::Shaping::Advanced,
-                        wrapping: core::text::Wrapping::None,
-                    },
-                );
-            Self {
-                content: Some(content),
-            }
-        } else {
-            Self { content: None }
-        }
+        self.content = Some(
+            <P::Renderer as core::text::Renderer>::Paragraph::with_text(
+                core::Text::<&str, <P::Renderer as core::text::Renderer>::Font> {
+                    content: text,
+                    bounds: Size::INFINITY,
+                    size: renderer.default_size(),
+                    line_height: core::text::LineHeight::default(),
+                    font: renderer.default_font(),
+                    horizontal_alignment: core::alignment::Horizontal::Left,
+                    vertical_alignment: core::alignment::Vertical::Top, //Bottom,
+                    shaping: core::text::Shaping::Advanced,
+                    wrapping: core::text::Wrapping::None,
+                },
+            ),
+        );
     }
 
     fn fill(&self, renderer: &mut P::Renderer, caret_position: Point) {
@@ -1247,13 +1227,13 @@ impl<P: Program> Preedit<P> {
             caret_position.x,
             caret_position.y - content.min_height(),
         );
-        let bounds2 = core::Rectangle::new(top_left, content.min_bounds());
-        renderer.with_layer(bounds2, |renderer| {
+        let bounds = core::Rectangle::new(top_left, content.min_bounds());
+        renderer.with_layer(bounds, |renderer| {
             renderer.fill_paragraph(
                 content,
                 top_left,
                 core::Color::BLACK,
-                bounds2,
+                bounds,
             );
         });
     }
