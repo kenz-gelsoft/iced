@@ -1229,6 +1229,14 @@ impl<P: Program> Preedit<P> {
         );
         let bounds = core::Rectangle::new(top_left, content.min_bounds());
         renderer.with_layer(bounds, |renderer| {
+            let quad = core::renderer::Quad {
+                bounds,
+                border: core::Border::default(),
+                shadow: core::Shadow::default(),
+            };
+            renderer
+                .fill_quad(quad, core::Background::Color(core::Color::WHITE));
+
             renderer.fill_paragraph(
                 content,
                 top_left,
