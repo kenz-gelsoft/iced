@@ -730,6 +730,7 @@ where
                 let translation =
                     state.translation(self.direction, bounds, content_bounds);
 
+                let children_may_have_caret = shell.caret_info().is_none();
                 self.content.as_widget_mut().update(
                     &mut tree.children[0],
                     event.clone(),
@@ -745,14 +746,16 @@ where
                     },
                 );
 
-                if let Some(caret_info) = shell.caret_info() {
-                    shell.update_caret_info(Some(CaretInfo {
-                        allowed: caret_info.allowed,
-                        position: Point::new(
-                            caret_info.position.x - translation.x,
-                            caret_info.position.y - translation.y,
-                        ),
-                    }));
+                if children_may_have_caret {
+                    if let Some(caret_info) = shell.caret_info() {
+                        shell.update_caret_info(Some(CaretInfo {
+                            allowed: caret_info.allowed,
+                            position: Point::new(
+                                caret_info.position.x - translation.x,
+                                caret_info.position.y - translation.y,
+                            ),
+                        }));
+                    }
                 }
             };
 
