@@ -1177,7 +1177,12 @@ fn update_input_method<P, C>(
     let text = window.state.preedit();
     if !text.is_empty() {
         preedit.update(text.as_str(), &window.renderer);
-        preedit.fill(&mut window.renderer, caret_info.position);
+        preedit.fill(
+            &mut window.renderer,
+            window.state.text_color(),
+            window.state.background_color(),
+            caret_info.position,
+        );
     }
 }
 
@@ -1211,7 +1216,13 @@ impl<P: Program> Preedit<P> {
         );
     }
 
-    fn fill(&self, renderer: &mut P::Renderer, caret_position: Point) {
+    fn fill(
+        &self,
+        renderer: &mut P::Renderer,
+        fore_color: core::Color,
+        bg_color: core::Color,
+        caret_position: Point,
+    ) {
         use core::text::Paragraph as _;
         use core::text::Renderer as _;
         use core::Renderer as _;
@@ -1229,20 +1240,21 @@ impl<P: Program> Preedit<P> {
         );
         let bounds = core::Rectangle::new(top_left, content.min_bounds());
         renderer.with_layer(bounds, |renderer| {
-            let quad = core::renderer::Quad {
+            renderer.fill_quad(core::renderer::Quad {
                 bounds,
-                border: core::Border::default(),
-                shadow: core::Shadow::default(),
-            };
-            renderer
-                .fill_quad(quad, core::Background::Color(core::Color::WHITE));
+                ..Default::default()
+            }, core::Background::Color(bg_color));
 
-            renderer.fill_paragraph(
-                content,
-                top_left,
-                core::Color::BLACK,
-                bounds,
-            );
+            let underline = 2.;
+            renderer.fill_quad(core::renderer::Quad {
+                bounds: bounds.shrink(core::Padding {
+                    top: bounds.height - underline,
+                    ..Default::default()
+                }),
+                ..Default::default()
+            }, core::Background::Color(fore_color));
+
+            renderer.fill_paragraph(content, top_left, fore_color, bounds);
         });
     }
 }
