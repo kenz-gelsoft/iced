@@ -1168,52 +1168,81 @@ fn update_input_method<P, C>(
     P: Program,
     C: Compositor<Renderer = P::Renderer> + 'static,
 {
-    window.raw.set_ime_allowed(caret_info.input_method_allowed);
-    window.raw.set_ime_cursor_area(
-        LogicalPosition::new(caret_info.position.x, caret_info.position.y),
-        LogicalSize::new(10, 10),
-    );
+    let mut preedit_cursor_position =
+        LogicalPosition::new(caret_info.position.x, caret_info.position.y);
 
     let text = window.state.preedit();
     if !text.is_empty() {
-        preedit.update(text.as_str(), &window.renderer);
+        let (layer_bounds, preedit_cursor_offset) =
+            preedit.update(&text, &window.renderer);
+        preedit_cursor_position.x += preedit_cursor_offset;
         preedit.fill(
             &mut window.renderer,
             window.state.text_color(),
             window.state.background_color(),
             caret_info.position,
+            layer_bounds,
         );
     }
+
+    window.raw.set_ime_allowed(caret_info.input_method_allowed);
+    window
+        .raw
+        .set_ime_cursor_area(preedit_cursor_position, LogicalSize::new(10, 10));
 }
 
 struct Preedit<P: Program> {
-    content: Option<<P::Renderer as core::text::Renderer>::Paragraph>,
+    content: Vec<<P::Renderer as core::text::Renderer>::Paragraph>,
 }
 
 impl<P: Program> Preedit<P> {
     fn new() -> Self {
-        Self { content: None }
+        Self { content: vec![] }
     }
 
-    fn update(&mut self, text: &str, renderer: &P::Renderer) {
-        use core::text::Paragraph as _;
-        use core::text::Renderer as _;
+    fn update(
+        &mut self,
+        text: &[String],
+        renderer: &P::Renderer,
+    ) -> (Size, f32) {
+        let mut layer_bounds = Size::default();
+        let mut preedit_cursor_offset = 0.;
+        self.content = text
+            .iter()
+            .enumerate()
+            .map(|(i, text)| {
+                use core::text::Paragraph as _;
+                use core::text::Renderer as _;
 
-        self.content = Some(
-            <P::Renderer as core::text::Renderer>::Paragraph::with_text(
-                core::Text::<&str, <P::Renderer as core::text::Renderer>::Font> {
-                    content: text,
-                    bounds: Size::INFINITY,
-                    size: renderer.default_size(),
-                    line_height: core::text::LineHeight::default(),
-                    font: renderer.default_font(),
-                    horizontal_alignment: core::alignment::Horizontal::Left,
-                    vertical_alignment: core::alignment::Vertical::Top, //Bottom,
-                    shaping: core::text::Shaping::Advanced,
-                    wrapping: core::text::Wrapping::None,
-                },
-            ),
-        );
+                let paragraph =
+                    <P::Renderer as core::text::Renderer>::Paragraph::with_text(
+                        core::Text::<
+                            &str,
+                            <P::Renderer as core::text::Renderer>::Font,
+                        > {
+                            content: text.as_str(),
+                            bounds: Size::INFINITY,
+                            size: renderer.default_size(),
+                            line_height: core::text::LineHeight::default(),
+                            font: renderer.default_font(),
+                            horizontal_alignment:
+                                core::alignment::Horizontal::Left,
+                            vertical_alignment: core::alignment::Vertical::Top, //Bottom,
+                            shaping: core::text::Shaping::Advanced,
+                            wrapping: core::text::Wrapping::None,
+                        },
+                    );
+                if i == 1 {
+                    preedit_cursor_offset = layer_bounds.width;
+                }
+                layer_bounds.width += paragraph.min_width();
+                layer_bounds.height =
+                    layer_bounds.height.max(paragraph.min_height());
+
+                paragraph
+            })
+            .collect();
+        (layer_bounds, preedit_cursor_offset)
     }
 
     fn fill(
@@ -1222,39 +1251,74 @@ impl<P: Program> Preedit<P> {
         fore_color: core::Color,
         bg_color: core::Color,
         caret_position: Point,
+        layer_bounds: Size,
     ) {
         use core::text::Paragraph as _;
         use core::text::Renderer as _;
         use core::Renderer as _;
 
-        let Some(ref content) = self.content else {
-            return;
-        };
-        if content.min_width() < 1.0 {
-            return;
-        }
-
-        let top_left = Point::new(
+        let mut top_left = Point::new(
             caret_position.x,
-            caret_position.y - content.min_height(),
+            caret_position.y - layer_bounds.height,
         );
-        let bounds = core::Rectangle::new(top_left, content.min_bounds());
-        renderer.with_layer(bounds, |renderer| {
-            renderer.fill_quad(core::renderer::Quad {
-                bounds,
-                ..Default::default()
-            }, core::Background::Color(bg_color));
+        let layer_bounds = core::Rectangle::new(top_left, layer_bounds);
+        renderer.with_layer(layer_bounds, |renderer| {
+            self.content.iter().enumerate().for_each(|(i, content)| {
+                let bounds =
+                    core::Rectangle::new(top_left, content.min_bounds());
+                top_left.x += content.min_width();
 
-            let underline = 2.;
-            renderer.fill_quad(core::renderer::Quad {
-                bounds: bounds.shrink(core::Padding {
-                    top: bounds.height - underline,
-                    ..Default::default()
-                }),
-                ..Default::default()
-            }, core::Background::Color(fore_color));
+                if i != 1 && content.min_width() < 1.0 {
+                    return;
+                }
+                let (fore_color, bg_color, underline, caret_in_preedit) =
+                    if i == 1 {
+                        if content.min_width() < 1. {
+                            // caret in preedit
+                            (fore_color, bg_color, 2., 2.)
+                        } else {
+                            // selection inverts foreground and background colors without underline
+                            (bg_color, fore_color, 0., 0.)
+                        }
+                    } else {
+                        (fore_color, bg_color, 2., 0.)
+                    };
 
-            renderer.fill_paragraph(content, top_left, fore_color, bounds);
+                renderer.fill_quad(
+                    core::renderer::Quad {
+                        bounds,
+                        ..Default::default()
+                    },
+                    core::Background::Color(bg_color),
+                );
+
+                if underline != 0. {
+                    renderer.fill_quad(
+                        core::renderer::Quad {
+                            bounds: bounds.shrink(core::Padding {
+                                top: bounds.height - underline,
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        },
+                        core::Background::Color(fore_color),
+                    );
+                }
+                if caret_in_preedit != 0. {
+                    renderer.fill_quad(
+                        core::renderer::Quad {
+                            bounds: bounds.shrink(core::Padding {
+                                right: bounds.width - caret_in_preedit,
+                                ..Default::default()
+                            }),
+                            ..Default::default()
+                        },
+                        core::Background::Color(fore_color),
+                    );
+                }
+
+                renderer.fill_paragraph(content, top_left, fore_color, bounds);
+            });
         });
     }
 }

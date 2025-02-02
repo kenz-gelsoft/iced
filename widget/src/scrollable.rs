@@ -753,7 +753,8 @@ where
                                 caret_info.position.x - translation.x,
                                 caret_info.position.y - translation.y,
                             ),
-                            input_method_allowed: caret_info.input_method_allowed,
+                            input_method_allowed: caret_info
+                                .input_method_allowed,
                         }));
                     }
                 }

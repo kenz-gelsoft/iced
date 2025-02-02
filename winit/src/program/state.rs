@@ -22,7 +22,7 @@ where
     modifiers: winit::keyboard::ModifiersState,
     theme: P::Theme,
     style: theme::Style,
-    preedit: String,
+    preedit: (String, Option<(usize, usize)>),
 }
 
 impl<P: Program> Debug for State<P>
@@ -74,7 +74,7 @@ where
             modifiers: winit::keyboard::ModifiersState::default(),
             theme,
             style,
-            preedit: String::default(),
+            preedit: (String::default(), None),
         }
     }
 
@@ -139,8 +139,17 @@ where
     }
 
     /// TODO
-    pub fn preedit(&self) -> String {
-        self.preedit.clone()
+    pub fn preedit(&self) -> Vec<String> {
+        let (ref string, ref selection) = self.preedit;
+        if let Some(selection) = selection {
+            vec![
+                string[..selection.0].into(),
+                string[selection.0..selection.1].into(),
+                string[selection.1..].into(),
+            ]
+        } else {
+            vec![string.clone()]
+        }
     }
 
     /// Processes the provided window event and updates the [`State`] accordingly.
@@ -187,8 +196,8 @@ where
                 self.modifiers = new_modifiers.state();
             }
             WindowEvent::Ime(ime) => {
-                if let Ime::Preedit(text, _) = ime {
-                    self.preedit = text.clone();
+                if let Ime::Preedit(text, selection) = ime {
+                    self.preedit = (text.clone(), selection.clone());
                 }
             }
             #[cfg(feature = "debug")]
