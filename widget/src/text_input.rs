@@ -1340,8 +1340,8 @@ where
                 .unwrap_or(Rectangle::with_size(Size::<f32>::default()));
             let bottom_left = Point::new(rect.x, rect.y + rect.height);
             Some(CaretInfo {
-                allowed: true,
                 position: bottom_left,
+                input_method_allowed: true,
             })
         } else {
             None

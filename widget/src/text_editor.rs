@@ -877,8 +877,8 @@ where
                 .unwrap_or(Rectangle::default());
             let bottom_left = Point::new(rect.x, rect.y + rect.height);
             Some(CaretInfo {
-                allowed: true,
                 position: bottom_left,
+                input_method_allowed: true,
             })
         } else {
             None

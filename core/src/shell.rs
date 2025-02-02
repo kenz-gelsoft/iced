@@ -6,9 +6,9 @@ use crate::{event, Point};
 #[derive(Clone, Copy, Debug)]
 pub struct CaretInfo {
     /// TODO
-    pub allowed: bool,
-    /// TODO
     pub position: Point,
+    /// TODO
+    pub input_method_allowed: bool,
 }
 
 /// A connection to the state of a shell.

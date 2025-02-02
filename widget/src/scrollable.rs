@@ -749,11 +749,11 @@ where
                 if children_may_have_caret {
                     if let Some(caret_info) = shell.caret_info() {
                         shell.update_caret_info(Some(CaretInfo {
-                            allowed: caret_info.allowed,
                             position: Point::new(
                                 caret_info.position.x - translation.x,
                                 caret_info.position.y - translation.y,
                             ),
+                            input_method_allowed: caret_info.input_method_allowed,
                         }));
                     }
                 }

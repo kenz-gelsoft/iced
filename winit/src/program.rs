@@ -1168,7 +1168,7 @@ fn update_input_method<P, C>(
     P: Program,
     C: Compositor<Renderer = P::Renderer> + 'static,
 {
-    window.raw.set_ime_allowed(caret_info.allowed);
+    window.raw.set_ime_allowed(caret_info.input_method_allowed);
     window.raw.set_ime_cursor_area(
         LogicalPosition::new(caret_info.position.x, caret_info.position.y),
         LogicalSize::new(10, 10),
