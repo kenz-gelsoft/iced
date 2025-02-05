@@ -434,6 +434,7 @@ where
             + alignment_offset;
 
         InputMethod::Open {
+            target: state.id.clone().unwrap(),
             position: Point::new(x, text_bounds.y + text_bounds.height),
             purpose: if self.is_secure {
                 input_method::Purpose::Secure
@@ -645,7 +646,9 @@ where
     }
 
     fn state(&self) -> tree::State {
-        tree::State::new(State::<Renderer::Paragraph>::new())
+        let mut state = State::<Renderer::Paragraph>::new();
+        state.id = Some(widget::Id::unique());
+        tree::State::new(state)
     }
 
     fn diff(&self, tree: &mut Tree) {
@@ -1340,6 +1343,26 @@ where
                             ),
                         );
                     }
+                // } else if let Some(preedit) = &state.is_ime_open {
+                //     // Commit preedit when we lost focus
+                //     let text = &preedit.content;
+
+                //     let Some(on_input) = &self.on_input else {
+                //         return;
+                //     };
+
+                //     let mut editor =
+                //         Editor::new(&mut self.value, &mut state.cursor);
+                //     editor.paste(Value::new(text));
+
+                //     // focus.updated_at = Instant::now();
+                //     state.is_pasting = None;
+
+                //     let message = (on_input)(editor.contents());
+                //     shell.publish(message);
+                //     shell.capture_event();
+
+                //     update_cache(state, &self.value);
                 }
             }
             _ => {}
@@ -1523,6 +1546,7 @@ pub fn select_all<T>(id: impl Into<Id>) -> Task<T> {
 /// The state of a [`TextInput`].
 #[derive(Debug, Default, Clone)]
 pub struct State<P: text::Paragraph> {
+    id: Option<widget::Id>,
     value: paragraph::Plain<P>,
     placeholder: paragraph::Plain<P>,
     icon: paragraph::Plain<P>,

@@ -1,5 +1,5 @@
 //! Listen to input method events.
-use crate::Point;
+use crate::{widget::Id, Point};
 
 use std::ops::Range;
 
@@ -14,6 +14,8 @@ pub enum InputMethod<T = String> {
     Allowed,
     /// Input method is open.
     Open {
+        /// The widget id of the input target.
+        target: Id,
         /// The position at which the input method dialog should be placed.
         position: Point,
         /// The [`Purpose`] of the input method.
@@ -144,10 +146,12 @@ impl<T> InputMethod<T> {
             Self::Disabled => InputMethod::Disabled,
             Self::Allowed => InputMethod::Allowed,
             Self::Open {
+                target,
                 position,
                 purpose,
                 preedit,
             } => InputMethod::Open {
+                target: target.clone(),
                 position: *position,
                 purpose: *purpose,
                 preedit: preedit.as_ref().map(Preedit::to_owned),

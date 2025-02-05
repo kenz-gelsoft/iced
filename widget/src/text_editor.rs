@@ -44,7 +44,7 @@ use crate::core::text::highlighter::{self, Highlighter};
 use crate::core::text::{self, LineHeight, Text, Wrapping};
 use crate::core::time::{Duration, Instant};
 use crate::core::widget::operation;
-use crate::core::widget::{self, Widget};
+use crate::core::widget::{self, Id, Widget};
 use crate::core::window;
 use crate::core::{
     Background, Border, Color, Element, Event, InputMethod, Length, Padding,
@@ -364,6 +364,7 @@ where
             cursor + translation + Vector::new(0.0, f32::from(line_height));
 
         InputMethod::Open {
+            target: state.id.clone(),
             position,
             purpose: input_method::Purpose::Normal,
             preedit: Some(preedit.as_ref()),
@@ -496,6 +497,7 @@ where
 /// The state of a [`TextEditor`].
 #[derive(Debug)]
 pub struct State<Highlighter: text::Highlighter> {
+    id: Id,
     focus: Option<Focus>,
     preedit: Option<input_method::Preedit>,
     last_click: Option<mouse::Click>,
@@ -571,6 +573,7 @@ where
 
     fn state(&self) -> widget::tree::State {
         widget::tree::State::new(State {
+            id: Id::unique(),
             focus: None,
             preedit: None,
             last_click: None,

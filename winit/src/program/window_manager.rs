@@ -6,6 +6,7 @@ use crate::core::renderer;
 use crate::core::text;
 use crate::core::theme;
 use crate::core::time::Instant;
+use crate::core::widget;
 use crate::core::window::{Id, RedrawRequest};
 use crate::core::{
     Color, InputMethod, Padding, Point, Rectangle, Size, Text, Vector,
@@ -74,6 +75,7 @@ where
                 renderer,
                 mouse_interaction: mouse::Interaction::None,
                 redraw_at: None,
+                input_method_target: None,
                 preedit: None,
             },
         );
@@ -165,6 +167,7 @@ where
     pub surface: C::Surface,
     pub renderer: P::Renderer,
     pub redraw_at: Option<Instant>,
+    input_method_target: Option<widget::Id>,
     preedit: Option<Preedit<P::Renderer>>,
 }
 
@@ -216,11 +219,20 @@ where
         }
 
         if let InputMethod::Open {
+            target,
             position,
             purpose,
             preedit,
         } = input_method
         {
+            if let Some(old_target) = &self.input_method_target {
+                if *old_target != target {
+                    self.raw.set_ime_allowed(false);
+                    self.raw.set_ime_allowed(true);
+                }
+            }
+            self.input_method_target = Some(target);
+
             self.raw.set_ime_cursor_area(
                 LogicalPosition::new(position.x, position.y),
                 LogicalSize::new(10, 10), // TODO?
