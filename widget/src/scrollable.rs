@@ -729,7 +729,7 @@ where
                     _ => mouse::Cursor::Unavailable,
                 };
 
-                let had_input_method = shell.input_method().is_open();
+                let had_input_method = shell.input_method().is_positioned();
 
                 let translation =
                     state.translation(self.direction, bounds, content_bounds);
@@ -750,10 +750,12 @@ where
                 );
 
                 if !had_input_method {
-                    if let InputMethod::Open { position, .. } =
-                        shell.input_method_mut()
-                    {
-                        *position = *position + translation;
+                    match shell.input_method_mut() {
+                        InputMethod::Allowed { position }
+                        | InputMethod::Open { position, .. } => {
+                            *position = *position + translation;
+                        }
+                        _ => {}
                     }
                 }
             };

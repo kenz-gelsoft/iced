@@ -130,9 +130,9 @@ impl InputMethod {
         }
     }
 
-    /// Returns true if the [`InputMethod`] is open.
-    pub fn is_open(&self) -> bool {
-        matches!(self, Self::Open { .. })
+    /// Returns true if the [`InputMethod`] is allowed or open.
+    pub fn is_positioned(&self) -> bool {
+        matches!(self, Self::Allowed { .. } | Self::Open { .. })
     }
 }
 
