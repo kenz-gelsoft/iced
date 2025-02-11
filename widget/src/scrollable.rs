@@ -38,8 +38,9 @@ use crate::core::widget::operation::{self, Operation};
 use crate::core::widget::tree::{self, Tree};
 use crate::core::window;
 use crate::core::{
-    self, id::Internal, Background, Clipboard, Color, Element, Layout, Length,
-    Padding, Pixels, Point, Rectangle, Shell, Size, Theme, Vector, Widget,
+    self, id::Internal, Background, Clipboard, Color, Element, InputMethod,
+    Layout, Length, Padding, Pixels, Point, Rectangle, Shell, Size, Theme,
+    Vector, Widget,
 };
 use crate::runtime::task::{self, Task};
 use crate::runtime::Action;
@@ -761,6 +762,8 @@ where
                 _ => mouse::Cursor::Unavailable,
             };
 
+            let had_input_method = shell.input_method().is_open();
+
             let translation =
                 state.translation(self.direction, bounds, content_bounds);
             let mut c_event = match event.clone() {
@@ -794,7 +797,7 @@ where
                 e => e,
             };
 
-            self.content.as_widget_mut().on_event(
+            let status = self.content.as_widget_mut().on_event(
                 &mut tree.children[0],
                 c_event,
                 content,
@@ -807,7 +810,17 @@ where
                     x: bounds.x + translation.x,
                     ..bounds
                 },
-            )
+            );
+
+            if !had_input_method {
+                if let InputMethod::Open { position, .. } =
+                    shell.input_method_mut()
+                {
+                    *position = *position + translation;
+                }
+            }
+
+            status
         };
 
         if matches!(
