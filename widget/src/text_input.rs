@@ -421,7 +421,7 @@ where
         let text = state.value.raw();
         let (cursor_x, scroll_offset) =
             measure_cursor_and_scroll_offset(text, text_bounds, caret_index);
-        
+
         let alignment_offset = alignment_offset(
             text_bounds.width,
             text.min_width(),
@@ -430,7 +430,7 @@ where
 
         let x = (text_bounds.x + cursor_x).floor() - scroll_offset
             + alignment_offset;
-        
+
         InputMethod::Open {
             position: Point::new(x, text_bounds.y + text_bounds.height),
             purpose: if self.is_secure {
@@ -591,7 +591,13 @@ where
         };
 
         let draw = |renderer: &mut Renderer, viewport| {
-            let paragraph = if text.is_empty() {
+            let paragraph = if text.is_empty()
+                && state
+                    .is_ime_open
+                    .as_ref()
+                    .map(|preedit| preedit.content.is_empty())
+                    .unwrap_or(true)
+            {
                 state.placeholder.raw()
             } else {
                 state.value.raw()
@@ -1188,7 +1194,7 @@ where
                     state.is_ime_open =
                         matches!(event, input_method::Event::Opened)
                             .then(input_method::Preedit::new);
-                    
+
                     shell.request_redraw(window::RedrawRequest::NextFrame);
                 }
                 input_method::Event::Preedit(content, selection) => {
@@ -1220,7 +1226,7 @@ where
 
                         let message = (on_input)(editor.contents());
                         shell.publish(message);
-                        
+
                         update_cache(state, &self.value);
 
                         return event::Status::Captured;
