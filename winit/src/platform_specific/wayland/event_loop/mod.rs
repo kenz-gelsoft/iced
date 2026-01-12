@@ -195,6 +195,16 @@ impl SctkEventLoop {
                             crate::Action::Dropped(id) => {
                                 _ = state.destroyed.remove(&id.inner());
                             }
+                            crate::Action::SetImeAllowed(allowed) => {
+                                if let Some(text_input) = state.text_input.as_ref() {
+                                    if allowed {
+                                        text_input.enable();
+                                    } else {
+                                        text_input.disable();
+                                    }
+                                    text_input.commit();
+                                }
+                            }
                             crate::Action::SubsurfaceResize(id, size) => {
                                 // reposition the surface
                                 if let Some(pos) = state

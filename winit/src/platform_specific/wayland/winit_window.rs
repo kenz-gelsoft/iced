@@ -260,15 +260,19 @@ impl winit::window::Window for SctkWinitWindow {
         position: winit::dpi::Position,
         size: winit::dpi::Size,
     ) {
-        todo!()
+        tracing::warn!(
+            "set_ime_cursor_area is not implemented for wayland windows."
+        );
     }
 
     fn set_ime_allowed(&self, allowed: bool) {
-        todo!()
+        _ = self.tx.send(Action::SetImeAllowed(allowed));
     }
 
     fn set_ime_purpose(&self, purpose: winit::window::ImePurpose) {
-        todo!()
+        tracing::warn!(
+            "set_ime_purpose is not implemented for wayland windows."
+        );
     }
 
     fn set_blur(&self, blur: bool) {

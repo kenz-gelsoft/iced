@@ -37,6 +37,7 @@ pub(crate) enum Action {
     RemoveWindow(window::Id),
     Dropped(SurfaceIdWrapper),
     SubsurfaceResize(window::Id, Size),
+    SetImeAllowed(bool),
 }
 
 impl std::fmt::Debug for Action {
@@ -63,6 +64,9 @@ impl std::fmt::Debug for Action {
                 .finish(),
             Self::ResizeWindow(arg0) => {
                 f.debug_tuple("ResizeWindow").field(arg0).finish()
+            }
+            Self::SetImeAllowed(allowed) => {
+                f.debug_tuple("SetImeAllowed").field(allowed).finish()
             }
         }
     }
