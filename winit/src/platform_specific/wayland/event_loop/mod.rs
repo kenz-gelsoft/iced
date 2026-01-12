@@ -6,7 +6,7 @@ pub mod state;
 use crate::platform_specific::SurfaceIdWrapper;
 use crate::{
     futures::futures::channel::mpsc,
-    handlers::overlap::OverlapNotifyV1,
+    handlers::{overlap::OverlapNotifyV1, text_input::TextInputManager},
     platform_specific::wayland::{
         handlers::{
             wp_fractional_scaling::FractionalScalingManager,
@@ -329,6 +329,7 @@ impl SctkEventLoop {
                         1..=1,
                         (),
                     ).ok(),
+                    text_input_manager: TextInputManager::new(&globals, &qh).ok(),
 
                     registry_state,
 
@@ -361,6 +362,7 @@ impl SctkEventLoop {
                     overlap_notifications: HashMap::new(),
                     subsurface_state: None,
                     pending_corner_radius: HashMap::new(),
+                    text_input: None,
                 },
                 _features: Default::default(),
             };
