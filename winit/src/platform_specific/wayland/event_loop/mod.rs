@@ -373,6 +373,8 @@ impl SctkEventLoop {
                     subsurface_state: None,
                     pending_corner_radius: HashMap::new(),
                     text_input: None,
+                    preedit: None,
+                    pending_commit: None,
                 },
                 _features: Default::default(),
             };

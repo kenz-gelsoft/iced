@@ -2,7 +2,7 @@ use crate::{
     handlers::{
         activation::IcedRequestData,
         overlap::{OverlapNotificationV1, OverlapNotifyV1},
-        text_input::TextInputManager,
+        text_input::{Preedit, TextInputManager},
     },
     platform_specific::{
         wayland::{
@@ -500,6 +500,8 @@ pub struct SctkState {
 
     pub(crate) text_input_manager: Option<TextInputManager>,
     pub(crate) text_input: Option<Arc<ZwpTextInputV3>>,
+    pub(crate) preedit: Option<Preedit>,
+    pub(crate) pending_commit: Option<String>,
 }
 
 /// An error that occurred while running an application.
