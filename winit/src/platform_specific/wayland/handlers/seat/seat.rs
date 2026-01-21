@@ -149,9 +149,8 @@ impl SeatHandler for SctkState {
             .then_some(self.text_input_manager.as_ref())
             .flatten()
         {
-            self.text_input = Some(Arc::new(
-                text_input_manager.get_text_input(&seat, &qh, ()),
-            ));
+            self.text_input =
+                Some(Arc::new((text_input_manager).get_text_input(&seat, &qh)));
         }
     }
 

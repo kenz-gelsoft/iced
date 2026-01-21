@@ -9,6 +9,7 @@ use cctk::sctk::reexports::client::Dispatch;
 use cctk::sctk::reexports::protocols::wp::text_input::zv3::client::zwp_text_input_manager_v3::ZwpTextInputManagerV3;
 use cctk::sctk::reexports::protocols::wp::text_input::zv3::client::zwp_text_input_v3::Event as TextInputEvent;
 use cctk::sctk::reexports::protocols::wp::text_input::zv3::client::zwp_text_input_v3::ZwpTextInputV3;
+use wayland_client::protocol::wl_seat::WlSeat;
 use winit::event::{Ime, WindowEvent};
 use winit::window::WindowId;
 
@@ -33,13 +34,13 @@ impl TextInputManager {
             globals.bind(queue_handle, 1..=1, GlobalData)?;
         Ok(Self { text_input_manager })
     }
-}
 
-impl Deref for TextInputManager {
-    type Target = ZwpTextInputManagerV3;
-
-    fn deref(&self) -> &Self::Target {
-        &self.text_input_manager
+    pub fn get_text_input(
+        &self,
+        seat: &WlSeat,
+        qh: &QueueHandle<SctkState>,
+    ) -> ZwpTextInputV3 {
+        self.text_input_manager.get_text_input(&seat, &qh, ())
     }
 }
 
