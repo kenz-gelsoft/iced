@@ -205,6 +205,12 @@ impl SctkEventLoop {
                                     text_input.commit();
                                 }
                             }
+                            crate::Action::SetImeCursorArea(x, y, width, height) => {
+                                if let Some(text_input) = state.text_input.as_ref() {
+                                    text_input.set_cursor_rectangle(x, y, width, height);
+                                    text_input.commit();
+                                }
+                            }
                             crate::Action::SubsurfaceResize(id, size) => {
                                 // reposition the surface
                                 if let Some(pos) = state

@@ -260,9 +260,16 @@ impl winit::window::Window for SctkWinitWindow {
         position: winit::dpi::Position,
         size: winit::dpi::Size,
     ) {
-        tracing::warn!(
-            "set_ime_cursor_area is not implemented for wayland windows."
-        );
+        let guard = self.common.lock().unwrap();
+        let scale_factor = guard.fractional_scale.unwrap_or(1.);
+        let position = position.to_logical(scale_factor);
+        let size = size.to_logical(scale_factor);
+        _ = self.tx.send(Action::SetImeCursorArea(
+            position.x,
+            position.y,
+            size.width,
+            size.height,
+        ));
     }
 
     fn set_ime_allowed(&self, allowed: bool) {

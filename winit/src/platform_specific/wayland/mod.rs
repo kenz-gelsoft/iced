@@ -38,6 +38,7 @@ pub(crate) enum Action {
     Dropped(SurfaceIdWrapper),
     SubsurfaceResize(window::Id, Size),
     SetImeAllowed(bool),
+    SetImeCursorArea(i32, i32, i32, i32),
 }
 
 impl std::fmt::Debug for Action {
@@ -68,6 +69,13 @@ impl std::fmt::Debug for Action {
             Self::SetImeAllowed(allowed) => {
                 f.debug_tuple("SetImeAllowed").field(allowed).finish()
             }
+            Self::SetImeCursorArea(x, y, width, height) => f
+                .debug_tuple("SetImeAllowed")
+                .field(x)
+                .field(y)
+                .field(width)
+                .field(height)
+                .finish(),
         }
     }
 }
