@@ -339,7 +339,7 @@ impl SctkEventLoop {
                         1..=1,
                         (),
                     ).ok(),
-                    text_input_manager: TextInputManager::new(&globals, &qh).ok(),
+                    text_input_manager: TextInputManager::try_new(&registry_state, &qh),
 
                     registry_state,
 

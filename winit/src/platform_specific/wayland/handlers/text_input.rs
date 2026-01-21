@@ -1,14 +1,12 @@
-use std::ops::Deref;
-
 use cctk::sctk::globals::GlobalData;
 use cctk::sctk::reexports::client::{Connection, Proxy, QueueHandle};
 
 use cctk::sctk::reexports::client::delegate_dispatch;
-use cctk::sctk::reexports::client::globals::{BindError, GlobalList};
 use cctk::sctk::reexports::client::Dispatch;
 use cctk::sctk::reexports::protocols::wp::text_input::zv3::client::zwp_text_input_manager_v3::ZwpTextInputManagerV3;
 use cctk::sctk::reexports::protocols::wp::text_input::zv3::client::zwp_text_input_v3::Event as TextInputEvent;
 use cctk::sctk::reexports::protocols::wp::text_input::zv3::client::zwp_text_input_v3::ZwpTextInputV3;
+use cctk::sctk::registry::RegistryState;
 use wayland_client::protocol::wl_seat::WlSeat;
 use winit::event::{Ime, WindowEvent};
 use winit::window::WindowId;
@@ -22,17 +20,21 @@ pub struct Preedit {
 }
 
 pub struct TextInputManager {
-    text_input_manager: ZwpTextInputManagerV3,
+    manager: ZwpTextInputManagerV3,
 }
 
 impl TextInputManager {
-    pub fn new(
-        globals: &GlobalList,
-        queue_handle: &QueueHandle<SctkState>,
-    ) -> Result<Self, BindError> {
-        let text_input_manager =
-            globals.bind(queue_handle, 1..=1, GlobalData)?;
-        Ok(Self { text_input_manager })
+    pub fn try_new<D>(
+        registry: &RegistryState,
+        qh: &QueueHandle<D>,
+    ) -> Option<Self>
+    where
+        D: Dispatch<ZwpTextInputManagerV3, GlobalData> + 'static,
+    {
+        let manager = registry
+            .bind_one::<ZwpTextInputManagerV3, _, _>(qh, 1..=1, GlobalData)
+            .ok()?;
+        Some(Self { manager })
     }
 
     pub fn get_text_input(
@@ -40,7 +42,7 @@ impl TextInputManager {
         seat: &WlSeat,
         qh: &QueueHandle<SctkState>,
     ) -> ZwpTextInputV3 {
-        self.text_input_manager.get_text_input(&seat, &qh, ())
+        self.manager.get_text_input(&seat, &qh, ())
     }
 }
 
