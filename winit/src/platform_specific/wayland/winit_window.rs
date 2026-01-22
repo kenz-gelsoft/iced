@@ -277,9 +277,7 @@ impl winit::window::Window for SctkWinitWindow {
     }
 
     fn set_ime_purpose(&self, purpose: winit::window::ImePurpose) {
-        tracing::warn!(
-            "set_ime_purpose is not implemented for wayland windows."
-        );
+        _ = self.tx.send(Action::SetImePurpose(purpose));
     }
 
     fn set_blur(&self, blur: bool) {

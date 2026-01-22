@@ -51,8 +51,8 @@ use std::{
 use tracing::error;
 use wayland_backend::client::Backend;
 use wayland_client::globals::GlobalError;
-use wayland_protocols::wp::keyboard_shortcuts_inhibit::zv1::client::zwp_keyboard_shortcuts_inhibit_manager_v1;
-use winit::{dpi::LogicalSize, event_loop::OwnedDisplayHandle};
+use wayland_protocols::wp::{keyboard_shortcuts_inhibit::zv1::client::zwp_keyboard_shortcuts_inhibit_manager_v1, text_input::zv3::client::zwp_text_input_v3::{ContentHint, ContentPurpose}};
+use winit::{dpi::LogicalSize, event_loop::OwnedDisplayHandle, window::ImePurpose};
 
 use self::state::SctkState;
 
@@ -208,6 +208,17 @@ impl SctkEventLoop {
                             crate::Action::SetImeCursorArea(x, y, width, height) => {
                                 if let Some(text_input) = state.text_input.as_ref() {
                                     text_input.set_cursor_rectangle(x, y, width, height);
+                                    text_input.commit();
+                                }
+                            }
+                            crate::Action::SetImePurpose(purpose) => {
+                                if let Some(text_input) = state.text_input.as_ref() {
+                                    let (hint, purpose) = match purpose {
+                                        ImePurpose::Password => (ContentHint::SensitiveData, ContentPurpose::Password),
+                                        ImePurpose::Terminal => (ContentHint::None, ContentPurpose::Terminal),
+                                        _ => (ContentHint::None, ContentPurpose::Normal),
+                                    };
+                                    text_input.set_content_type(hint, purpose);
                                     text_input.commit();
                                 }
                             }
