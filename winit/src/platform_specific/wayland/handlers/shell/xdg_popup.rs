@@ -1,3 +1,4 @@
+use crate::event_loop::state::receive_frame;
 use crate::platform_specific::wayland::{
     event_loop::state::{self, PopupParent, SctkState},
     sctk_event::{PopupEventVariant, SctkEvent},
@@ -28,6 +29,7 @@ impl PopupHandler for SctkState {
         let mut guard = sctk_popup.common.lock().unwrap();
         guard.size =
             LogicalSize::new(configure.width as u32, configure.height as u32);
+        receive_frame(&mut self.frame_status, popup.wl_surface());
 
         self.sctk_events.push(SctkEvent::PopupEvent {
             variant: PopupEventVariant::Configure(

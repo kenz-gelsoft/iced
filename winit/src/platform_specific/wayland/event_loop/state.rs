@@ -1289,7 +1289,6 @@ impl SctkState {
                         match self.get_popup(settings) {
                             Ok((id, parent_id, toplevel_id, surface, common)) => {
                                 let wl_surface = surface.wl_surface().clone();
-                                receive_frame(&mut self.frame_status, &wl_surface);
                                 send_event(&self.events_sender, &self.proxy,
                                     SctkEvent::PopupEvent {
                                         variant: crate::platform_specific::wayland::sctk_event::PopupEventVariant::Created(self.queue_handle.clone(), surface, id, common, self.connection.display()),

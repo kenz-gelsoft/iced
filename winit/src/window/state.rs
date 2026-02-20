@@ -25,6 +25,7 @@ where
     theme_mode: theme::Mode,
     default_theme: P::Theme,
     style: theme::Style,
+    pub(crate) ready: bool,
 }
 
 impl<P: Program> Debug for State<P>
@@ -81,6 +82,7 @@ where
             theme_mode,
             default_theme,
             style,
+            ready: true,
         }
     }
 

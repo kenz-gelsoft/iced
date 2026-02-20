@@ -945,11 +945,14 @@ async fn run_instance<P>(
                     continue;
                 };
 
-                let Some((id, mut window)) =
+                let Some((id, mut window))  =
                     window_manager.get_mut_alias(window_id)
                 else {
                     continue;
                 };
+                if !window.state.ready {
+                    continue;
+                } 
                 // XX must force update to corner radius before the surface is committed.
                 #[cfg(feature = "wayland")]
                 if window.surface_version != window.state.surface_version()

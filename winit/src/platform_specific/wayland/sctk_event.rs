@@ -17,7 +17,7 @@ use dnd::DndSurface;
 use iced_debug::core::theme;
 use iced_futures::{
     core::{
-        Clipboard as _, Clipboard as _, Size,
+        Size,
         event::{
             PlatformSpecific,
             wayland::{
@@ -26,7 +26,7 @@ use iced_futures::{
         },
     },
     event,
-    futures::channel::mpsc,
+    futures::{SinkExt, channel::mpsc},
 };
 use iced_graphics::{Compositor, compositor};
 use iced_runtime::{
@@ -1010,6 +1010,7 @@ impl SctkEvent {
                             false, // TODO do we want to get this value here?
                             theme::Mode::None, // TODO do we really need to track the system theme here?
                         );
+                        window.state.ready = false;
                         let logical_size = window.logical_size();
 
                         let mut ui = crate::build_user_interface(
@@ -1083,7 +1084,6 @@ impl SctkEvent {
                             configure.width as f32,
                             configure.height as f32,
                         );
-
                         if let Some((id, w)) =
                             surface_ids.get(&surface.id()).and_then(|id| {
                                 window_manager
@@ -1091,6 +1091,17 @@ impl SctkEvent {
                                     .map(|v| (id.inner(), v))
                             })
                         {
+                            w.state.ready = true;
+                            if first {
+                                control_sender
+                                    .send(Control::Winit(
+                                        w.raw.id(),
+                                        winit::event::WindowEvent::RedrawRequested,
+                                    )).await
+                                    .expect("Send control message");
+                                proxy.wake_up();
+                            }
+
                             let scale = w.state.scale_factor();
                             let p_w = (configure.width.max(1) as f64 * scale)
                                 .ceil()
@@ -1199,12 +1210,15 @@ impl SctkEvent {
                     queue_handle,
                 );
                 #[cfg(feature = "a11y")]
-                control_sender
-                    .start_send(Control::InitAdapter(
-                        surface_id,
-                        sctk_winit.clone(),
-                    ))
-                    .expect("Send control message");
+                {
+                    control_sender
+                        .start_send(Control::InitAdapter(
+                            surface_id,
+                            sctk_winit.clone(),
+                        ))
+                        .expect("Send control message");
+                    proxy.wake_up();
+                }
 
                 if clipboard.window_id().is_none() {
                     *clipboard = Clipboard::connect(
