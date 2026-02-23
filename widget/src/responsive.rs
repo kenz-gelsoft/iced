@@ -201,7 +201,7 @@ where
     ) {
         if let Some(l) = layout.children().next() {
             self.content.as_widget().drag_destinations(
-                state,
+                &state.children[0],
                 l.with_virtual_offset(layout.virtual_offset()),
                 renderer,
                 dnd_rectangles,
