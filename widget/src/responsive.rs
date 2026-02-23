@@ -191,6 +191,23 @@ where
             translation,
         )
     }
+
+    fn drag_destinations(
+        &self,
+        state: &Tree,
+        layout: Layout<'_>,
+        renderer: &Renderer,
+        dnd_rectangles: &mut crate::core::clipboard::DndDestinationRectangles,
+    ) {
+        if let Some(l) = layout.children().next() {
+            self.content.as_widget().drag_destinations(
+                state,
+                l.with_virtual_offset(layout.virtual_offset()),
+                renderer,
+                dnd_rectangles,
+            );
+        }
+    }
 }
 
 impl<'a, Message, Theme, Renderer>
