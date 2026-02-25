@@ -2057,6 +2057,10 @@ where
                 platform_specific
                     .send_wayland(platform_specific::Action::RemoveWindow(id));
                 if let Some(window) = window_manager.remove(id) {
+                    clipboard.register_dnd_destination(
+                        DndSurface(Arc::new(Box::new(window.raw.clone()))),
+                        Vec::new(),
+                    );
                     if clipboard.window_id() == Some(window.raw.id()) {
                         *clipboard = window_manager
                             .first()
