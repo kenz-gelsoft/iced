@@ -95,8 +95,23 @@ impl Text {
             Text::Cached {
                 bounds,
                 clip_bounds,
+                align_y,
                 ..
-            } => bounds.intersection(clip_bounds),
+            } => {
+                // XX Must account for alignment...
+                // Is this really how it should be handled though?
+                let mut bounds = *bounds;
+                match align_y {
+                    alignment::Vertical::Center => {
+                        bounds.y -= bounds.height / 2.;
+                    }
+                    alignment::Vertical::Bottom => {
+                        bounds.y -= bounds.height;
+                    }
+                    _ => {}
+                };
+                bounds.intersection(clip_bounds)
+            }
             Text::Raw { raw, .. } => Some(raw.clip_bounds),
         }
     }
