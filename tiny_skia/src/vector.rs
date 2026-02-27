@@ -48,9 +48,10 @@ impl Pipeline {
                 (bounds.height * transform.sy) as u32,
             ),
         ) {
+            // XX Do not apply transform scaling for rotation to the position
             pixels.draw_pixmap(
-                (bounds.x * transform.sx) as i32,
-                (bounds.y * transform.sy) as i32,
+                (bounds.x) as i32,
+                (bounds.y) as i32,
                 image,
                 &tiny_skia::PixmapPaint {
                     opacity,
